@@ -107,3 +107,9 @@ body {
   background: radial-gradient(700px 260px at 15% 0%, rgba(255, 122, 26, 0.22), transparent), linear-gradient(180deg, #17120e, #0d0e12);
   border-bottom: 1px solid var(--nm-line); margin-bottom: 24px;
 }
+
+/* iOS: niente scorrimento laterale e niente zoom automatico sui campi (serve testo >= 16px) */
+html, body { overflow-x: clip; }
+@media (max-width: 47.99em) {
+  input, select, textarea { font-size: 16px !important; }
+}
