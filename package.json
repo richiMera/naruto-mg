@@ -1,0 +1,41 @@
+{
+  "name": "naruto-mg",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "preview": "vite preview",
+    "gen:types": "supabase gen types typescript --linked --schema public > src/lib/database.types.ts",
+    "db:push": "supabase db push"
+  },
+  "dependencies": {
+    "@mantine/charts": "^7.17.8",
+    "@mantine/core": "^7.17.8",
+    "@mantine/dates": "^7.17.8",
+    "@mantine/form": "^7.17.8",
+    "@mantine/hooks": "^7.17.8",
+    "@mantine/modals": "^7.17.8",
+    "@mantine/notifications": "^7.17.8",
+    "@supabase/supabase-js": "^2.119.2",
+    "@tabler/icons-react": "^3.53.0",
+    "@tanstack/react-query": "^5.108.4",
+    "dayjs": "^1.11.23",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6",
+    "recharts": "^2.15.4"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.32",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "postcss": "^8.5.33",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
+    "typescript": "~5.7.2",
+    "vite": "^6.4.6"
+  }
+}
