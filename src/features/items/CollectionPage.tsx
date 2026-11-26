@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button, Group, SegmentedControl, Select, Table, Text, TextInput, Checkbox } from '@mantine/core';
-import { IconDownload, IconSearch, IconStar } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
+import { Badge, Button, Group, SegmentedControl, Select, Stack, Table, Text, TextInput, Checkbox } from '@mantine/core';
+import { IconDownload, IconLayoutGrid, IconList, IconPlus, IconSearch, IconStar, IconCards } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 import { QueryState } from '../../components/QueryState';
@@ -9,6 +10,58 @@ import { formatCents } from '../../lib/money';
 import { KIND_LABEL, STATUS_COLOR, STATUS_LABEL } from '../../lib/format';
 import { centsForCsv, downloadCsv, toCsv } from '../../lib/csv';
 import { itemName, itemSetLabel, type ItemRow } from '../../lib/types';
+import { TcgCard } from '../../components/TcgCard';
+import { photoUrl } from '../../lib/supabase';
+
+const VIEW_KEY = 'nm-collection-view';
+function readView(): string {
+  try {
+    return localStorage.getItem(VIEW_KEY) ?? 'grid';
+  } catch {
+    return 'grid';
+  }
+}
+
+function CollectionGrid({ items }: { items: ItemRow[] }) {
+  const navigate = useNavigate();
+  return (
+    <div className="tcg-grid">
+      {items.map((i) => {
+        const card = i.catalog_cards;
+        const margin = i.value_cents != null && i.cost_cents != null ? i.value_cents - i.cost_cents : null;
+        const label = i.status !== 'owned' ? STATUS_LABEL[i.status] : card?.rarity ?? (i.kind !== 'card' ? KIND_LABEL[i.kind] : null);
+        return (
+          <TcgCard
+            key={i.id}
+            seed={i.catalog_card_id ?? i.catalog_product_id ?? i.id}
+            kind={i.kind}
+            title={itemName(i)}
+            subtitle={[itemSetLabel(i), i.condition].filter(Boolean).join(' · ')}
+            rarity={card?.rarity}
+            image={photoUrl(i.photo_path) ?? card?.image_url ?? i.catalog_products?.image_url}
+            badge={label && (
+              <Badge size="sm" variant="filled" color={i.status !== 'owned' ? STATUS_COLOR[i.status] : 'dark.6'} style={{ boxShadow: '0 2px 8px #0008' }}>
+                {i.showcase && <IconStar size={10} style={{ marginRight: 4 }} />}
+                {label}
+              </Badge>
+            )}
+            footer={
+              <>
+                <Text size="xs" fw={600}>{i.value_cents != null ? formatCents(i.value_cents) : formatCents(i.cost_cents)}</Text>
+                {margin != null ? (
+                  <Text size="xs" c={margin >= 0 ? 'teal.4' : 'red.4'}>{margin >= 0 ? '+' : '−'}{formatCents(Math.abs(margin))}</Text>
+                ) : (
+                  <Text size="xs" c="dimmed">{i.value_cents == null ? 'costo' : ''}</Text>
+                )}
+              </>
+            }
+            onClick={() => navigate(`/collezione/${i.id}`)}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 export function filterItems(items: ItemRow[], f: { kind: string; status: string; q: string; showcaseOnly: boolean }) {
   const term = f.q.trim().toLowerCase();
@@ -31,6 +84,15 @@ export function CollectionPage() {
   const [status, setStatus] = useState<string>('active');
   const [q, setQ] = useState('');
   const [showcaseOnly, setShowcaseOnly] = useState(false);
+  const [view, setViewState] = useState(readView);
+  const setView = (v: string) => {
+    setViewState(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      /* preferenza non salvata */
+    }
+  };
 
   const filtered = useMemo(() => filterItems(items.data ?? [], { kind, status, q, showcaseOnly }), [items.data, kind, status, q, showcaseOnly]);
   const totals = useMemo(
@@ -61,6 +123,14 @@ export function CollectionPage() {
         </Button>
       </PageHeader>
       <Group mb="md" wrap="wrap" align="flex-end">
+        <SegmentedControl
+          value={view}
+          onChange={setView}
+          data={[
+            { value: 'grid', label: <IconLayoutGrid size={16} style={{ display: 'block' }} aria-label="Griglia" /> },
+            { value: 'table', label: <IconList size={16} style={{ display: 'block' }} aria-label="Tabella" /> },
+          ]}
+        />
         <TextInput leftSection={<IconSearch size={16} />} placeholder="Cerca…" value={q} onChange={(e) => setQ(e.currentTarget.value)} style={{ flex: 1, minWidth: 180 }} />
         <SegmentedControl
           value={kind}
@@ -89,6 +159,7 @@ export function CollectionPage() {
             <Text size="sm" c="dimmed" mb="xs">
               {filtered.length} articoli · costo {formatCents(totals.cost)} · valore stimato {formatCents(totals.value)}
             </Text>
+            {view === 'grid' ? <CollectionGrid items={filtered} /> : (
             <Table.ScrollContainer minWidth={720}>
               <Table highlightOnHover striped>
                 <Table.Thead>
@@ -137,10 +208,19 @@ export function CollectionPage() {
                 </Table.Tbody>
               </Table>
             </Table.ScrollContainer>
+            )}
             {filtered.length === 0 && (
-              <Text c="dimmed" ta="center" py="lg">
-                Nessun articolo. Gli articoli entrano in collezione da Acquisti, Preordini arrivati o aprendo una box.
-              </Text>
+              <Stack align="center" py={48} gap="sm">
+                <IconCards size={56} stroke={1.2} color="var(--nm-dim)" />
+                <Text c="dimmed" ta="center" maw={420}>
+                  {(items.data ?? []).length === 0
+                    ? 'La collezione è vuota. Gli articoli entrano da Acquisti, dai Preordini arrivati o aprendo una box.'
+                    : 'Nessun articolo con questi filtri.'}
+                </Text>
+                {(items.data ?? []).length === 0 && (
+                  <Button component={Link} to="/acquisti?nuovo=1" leftSection={<IconPlus size={16} />}>Registra il primo acquisto</Button>
+                )}
+              </Stack>
             )}
           </>
         )}

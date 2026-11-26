@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AspectRatio, Badge, Card, Center, Container, Group, Image, SegmentedControl, SimpleGrid, Stack, Text, TextInput, Title, Anchor } from '@mantine/core';
-import { IconCards, IconSearch } from '@tabler/icons-react';
+import { Badge, Button, Container, Group, SegmentedControl, Stack, Text, TextInput } from '@mantine/core';
+import { IconLock, IconSearch } from '@tabler/icons-react';
+import { TcgCard } from '../../components/TcgCard';
+import { Brand } from '../../layout/AppLayout';
 import { Link } from 'react-router-dom';
 import { supabase, unwrap, photoUrl } from '../../lib/supabase';
 import { QueryState } from '../../components/QueryState';
@@ -38,58 +40,56 @@ export function ShowcasePage() {
     );
   }, [showcase.data, kind, q]);
 
+  const sets = new Set((showcase.data ?? []).map((i) => i.set_code).filter(Boolean)).size;
+
   return (
-    <Container size="lg" py="xl">
-      <Stack>
-        <Group justify="space-between">
-          <div>
-            <Title order={1}>Vetrina</Title>
-            <Text c="dimmed">La nostra collezione</Text>
-          </div>
-          <Anchor component={Link} to="/login" size="sm">Area riservata</Anchor>
-        </Group>
-        <Group wrap="wrap">
-          <TextInput leftSection={<IconSearch size={16} />} placeholder="Cerca…" value={q} onChange={(e) => setQ(e.currentTarget.value)} style={{ flex: 1, minWidth: 180 }} />
-          <SegmentedControl value={kind} onChange={setKind} data={[{ value: 'all', label: 'Tutto' }, { value: 'card', label: 'Carte' }, { value: 'box', label: 'Box' }, { value: 'sealed', label: 'Sealed' }]} />
-        </Group>
-        <QueryState query={showcase}>
-          {() =>
-            filtered.length === 0 ? (
-              <Text c="dimmed" ta="center" py="xl">Nessun articolo in vetrina.</Text>
-            ) : (
-              <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }}>
-                {filtered.map((i) => {
-                  const src = photoUrl(i.photo_path) ?? i.image_url;
-                  return (
-                    <Card key={i.item_id} withBorder padding="xs">
-                      <Card.Section>
-                        <AspectRatio ratio={63 / 88}>
-                          {src ? (
-                            <Image src={src} alt={i.name} fit="contain" bg="var(--mantine-color-gray-light)" />
-                          ) : (
-                            <Center bg="var(--mantine-color-gray-light)" data-testid="placeholder">
-                              <IconCards size={48} color="var(--mantine-color-gray-5)" />
-                            </Center>
-                          )}
-                        </AspectRatio>
-                      </Card.Section>
-                      <Text fw={600} size="sm" mt="xs" lineClamp={2}>{i.name}</Text>
-                      <Text size="xs" c="dimmed">
-                        {[i.set_code, i.number && `#${i.number}`].filter(Boolean).join(' ')}
-                      </Text>
-                      <Group gap={4} mt={4}>
-                        <Badge size="xs" variant="light">{KIND_LABEL[i.kind]}</Badge>
-                        {i.rarity && <Badge size="xs" variant="light" color="grape">{i.rarity}</Badge>}
-                        {i.grading_company && <Badge size="xs" variant="light" color="yellow">{i.grading_company} {i.grade}</Badge>}
-                      </Group>
-                    </Card>
-                  );
-                })}
-              </SimpleGrid>
-            )
-          }
-        </QueryState>
-      </Stack>
-    </Container>
+    <>
+      <div className="nm-showcase-head">
+        <Container size="lg" py={36}>
+          <Group justify="space-between" mb={28}>
+            <Brand />
+            <Button component={Link} to="/login" variant="default" size="xs" leftSection={<IconLock size={14} />}>Area riservata</Button>
+          </Group>
+          <div className="nm-label">La nostra collezione</div>
+          <Text className="disp" fz={{ base: 40, sm: 56 }} lh={1.05}>Vetrina</Text>
+          {showcase.data && (
+            <Text c="dimmed" mt={4}>
+              {showcase.data.length} pezzi{sets ? ` · ${sets} set` : ''}
+            </Text>
+          )}
+        </Container>
+      </div>
+      <Container size="lg" pb="xl">
+        <Stack>
+          <Group wrap="wrap">
+            <TextInput leftSection={<IconSearch size={16} />} placeholder="Cerca…" value={q} onChange={(e) => setQ(e.currentTarget.value)} style={{ flex: 1, minWidth: 180 }} />
+            <SegmentedControl value={kind} onChange={setKind} data={[{ value: 'all', label: 'Tutto' }, { value: 'card', label: 'Carte' }, { value: 'box', label: 'Box' }, { value: 'sealed', label: 'Sealed' }]} />
+          </Group>
+          <QueryState query={showcase}>
+            {() =>
+              filtered.length === 0 ? (
+                <Text c="dimmed" ta="center" py="xl">Nessun articolo in vetrina.</Text>
+              ) : (
+                <div className="tcg-grid">
+                  {filtered.map((i) => (
+                    <TcgCard
+                      key={i.item_id}
+                      seed={`${i.set_code ?? ''}${i.number ?? ''}${i.name}`}
+                      kind={i.kind}
+                      title={i.name}
+                      subtitle={[i.rarity ?? KIND_LABEL[i.kind], i.condition].filter(Boolean).join(' · ')}
+                      rarity={i.rarity}
+                      image={photoUrl(i.photo_path) ?? i.image_url}
+                      badge={i.grading_company && <Badge size="sm" color="yellow" variant="filled">{i.grading_company} {i.grade}</Badge>}
+                      footer={<Text size="xs" c="dimmed">{[i.set_code, i.number && `#${i.number}`, i.language].filter(Boolean).join(' · ')}</Text>}
+                    />
+                  ))}
+                </div>
+              )
+            }
+          </QueryState>
+        </Stack>
+      </Container>
+    </>
   );
 }

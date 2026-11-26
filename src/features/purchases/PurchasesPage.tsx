@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ActionIcon, Badge, Button, Drawer, Table, Text } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { PageHeader } from '../../components/PageHeader';
@@ -82,7 +83,14 @@ export function PurchasesTable({ storeId }: { storeId?: string }) {
 }
 
 export function PurchasesPage() {
-  const [open, setOpen] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const [open, setOpen] = useState(params.has('nuovo'));
+  useEffect(() => {
+    if (params.has('nuovo')) {
+      setOpen(true);
+      setParams({}, { replace: true });
+    }
+  }, [params, setParams]);
   return (
     <>
       <PageHeader title="Acquisti">

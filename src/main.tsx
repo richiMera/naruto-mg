@@ -11,6 +11,7 @@ import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/notifications/styles.css';
 import '@mantine/charts/styles.css';
+import './styles.css';
 import { theme } from './theme';
 import { AuthProvider } from './auth/AuthProvider';
 import { App } from './App';
@@ -23,7 +24,7 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="auto">
+    <MantineProvider theme={theme} forceColorScheme="dark">
       <DatesProvider settings={{ locale: 'it', firstDayOfWeek: 1 }}>
         <ModalsProvider>
           <Notifications position="top-right" />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { Alert, Anchor, Button, Center, Paper, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Anchor, Button, Center, Paper, PasswordInput, Stack, Text, TextInput } from '@mantine/core';
+import { Brand } from '../layout/AppLayout';
 import { useAuth } from './AuthProvider';
 import { supabaseConfigured } from '../lib/supabase';
 
@@ -28,10 +29,10 @@ export function LoginPage() {
 
   return (
     <Center mih="100vh" p="md">
-      <Paper withBorder shadow="sm" p="xl" radius="md" w="100%" maw={380}>
+      <Paper withBorder shadow="xl" p="xl" w="100%" maw={380} style={{ background: 'linear-gradient(160deg, #1c140e, #15171d 45%)' }}>
         <form onSubmit={submit}>
           <Stack>
-            <Title order={2}>Naruto MG</Title>
+            <Brand />
             <Text c="dimmed" size="sm">
               Accesso riservato ai membri.
             </Text>
